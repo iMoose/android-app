@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name"></string>
+    <string name="gif_help">Enter a gif name</string>
+    <string name="song_help">Enter an artist/song/album</string>
+    <string name="button_send">Send</string>
+    <string name="goto_gif">Display Gif</string>
+    <string name="gif_placeholder">Gif Text</string>
+    <string name="song_placeholder">Song Search Text</string>
+    <string name="goto_song">Search Song</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="tab_text_1">Tab 1</string>
+    <string name="tab_text_2">Tab 2</string>
+    <string name="tab_text_3">Tab 3</string>
+    <string name="action_settings">Settings</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+    <string name="goto_privacy">Goto Settings</string>
+    <string name="open_apps">Background Open</string>
+    <string name="owner">\@Imas Neupane 2018</string>
+</resources>
