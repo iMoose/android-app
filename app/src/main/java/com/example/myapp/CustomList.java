@@ -21,17 +21,26 @@ public class CustomList extends ArrayAdapter<String> {
     private final Activity context;
     private final ArrayList<String> imageDescriptions;
     private final ArrayList<String> imageURLS;
-    private final ArrayList<String> videoIDS;
-    private LruCache<String, Bitmap> cache;
+
+    // Calculate max size of cache
+    static int maxMemory = (int) Runtime.getRuntime().maxMemory() / 1024;
+    static int cacheSize = maxMemory / 8;
+
+    private static LruCache<String, Bitmap> cache = new LruCache<String, Bitmap>(cacheSize) {
+        @Override
+        protected int sizeOf(String key, Bitmap bitmap) {
+            // The cache size will be measured in kilobytes rather than
+            // number of items.
+            return bitmap.getByteCount() / 1024;
+        }
+    };
 
     public CustomList(Activity context,
-                      ArrayList<String> imageDescriptions, ArrayList<String> imageURLS, ArrayList<String> videoIDS, LruCache<String, Bitmap> cache) {
+                      ArrayList<String> imageDescriptions, ArrayList<String> imageURLS) {
         super(context, R.layout.list_single, imageDescriptions);
         this.context = context;
         this.imageDescriptions = imageDescriptions;
         this.imageURLS = imageURLS;
-        this.videoIDS = videoIDS;
-        this.cache = cache;
     }
 
     @Override
@@ -42,12 +51,17 @@ public class CustomList extends ArrayAdapter<String> {
 
         ImageView imageView = rowView.findViewById(R.id.img);
         txtTitle.setText(imageDescriptions.get(position));
-        new DownloadImageFromInternet(imageView).execute(imageURLS.get(position));
-        return rowView;
-    }
 
-    public String getVideoID(int position) {
-        return videoIDS.get(position);
+        String imageURL = imageURLS.get(position);
+        Bitmap cache = getBitmapFromMemCache(imageURL);
+
+        if (cache == null) {
+            new DownloadImageFromInternet(imageView).execute(imageURL);
+        }
+        else {
+            imageView.setImageBitmap(cache);
+        }
+        return rowView;
     }
 
     private class DownloadImageFromInternet extends AsyncTask<String, Void, Bitmap> {
@@ -59,10 +73,7 @@ public class CustomList extends ArrayAdapter<String> {
 
         protected Bitmap doInBackground(String... urls) {
             String imageURL = urls[0];
-            Bitmap bimage = getBitmapFromMemCache(imageURL);
-            if(bimage != null) {
-                return bimage;
-            }
+            Bitmap bimage = null;
             try {
                 InputStream in = new java.net.URL(imageURL).openStream();
                 bimage = BitmapFactory.decodeStream(in);
