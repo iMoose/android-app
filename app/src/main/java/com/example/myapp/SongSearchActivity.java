@@ -6,9 +6,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -35,49 +37,99 @@ public class SongSearchActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        final ArrayList<String> imageDescriptions =new ArrayList<>();
-        final ArrayList<String> imageURLS = new ArrayList<>();
-        final ArrayList<String> videoIDS = new ArrayList<>();
-
-//        imageDescriptions.add("Testing please work");
-//        imageURLS.add("https://www.sitebuilderreport.com/assets/facebook-stock-up-446fff24fb11820517c520c4a5a4c032.jpg");
-//        videoIDS.add("Video id number");
-
+        // Set layout
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_song);
 
+        // Get the search term
         Intent intent = getIntent();
         String message = intent.getStringExtra(GiffActivity.EXTRA_MESSAGE);
         String searchText = message.replaceAll(" ", "%20");
 
-        final TextView textView= findViewById(R.id.textView);
-        textView.setText(message);
+        // Display the search term
+        setTitle(message);
 
-        final ListView listView = findViewById(R.id.list);
+        // Get items from layout
+        final ListView listYouTube = findViewById(R.id.listYouTube);
+        final ListView listSpotify = findViewById(R.id.listSpotify);
+        final ToggleButton toggleView = findViewById(R.id.toggleView);
 
-        final CustomList adapter = new CustomList(SongSearchActivity.this, imageDescriptions, imageURLS, videoIDS);
+        // Configure toggling between YouTube and Spotify
+        toggleView.setText("");
+        toggleView.setTextOn("");
+        toggleView.setTextOff("");
 
-        listView.setAdapter(adapter);
+        toggleView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                if (isChecked) {
+                    // Button is on
+                    listYouTube.setVisibility(View.INVISIBLE);
+                    listSpotify.setVisibility(View.VISIBLE);
+                }
+                else {
+                    // Button is off
+                    listYouTube.setVisibility(View.VISIBLE);
+                    listSpotify.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        // Information holders for YouTube
+        final ArrayList<String> videoDescriptions =new ArrayList<>();
+        final ArrayList<String> youTubeImageURLS = new ArrayList<>();
+        final ArrayList<String> videoIDS = new ArrayList<>();
+
+        // Information holders for Spotify
+        final ArrayList<String> songDescriptions =new ArrayList<>();
+        final ArrayList<String> spotifyImageURLS = new ArrayList<>();
+        final ArrayList<String> spotifyURLS = new ArrayList<>();
+
+
+        // Adapters for holding the information for YouTube and Spotify
+        final CustomList youTubeAdapter = new CustomList(SongSearchActivity.this, videoDescriptions, youTubeImageURLS, videoIDS);
+        final CustomList spotifyAdapter = new CustomList(SongSearchActivity.this, songDescriptions, spotifyImageURLS, spotifyURLS);
+
+        // Setting adapters to listViews so they display the right information
+        listYouTube.setAdapter(youTubeAdapter);
+        listSpotify.setAdapter(spotifyAdapter);
+
+        // Set action listeners for clicking on an item in the listView
+        listYouTube.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int itemPosition, long location) {
                 String itemValue = videoIDS.get(itemPosition);
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(getYoutubeURL(itemValue))));
             }
         });
-        // Format layout
+
+        listSpotify.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int itemPosition, long location) {
+                String itemValue = spotifyURLS.get(itemPosition);
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(itemValue)));
+            }
+        });
+
+        // YouTube request URL
+        String requestYouTubeURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=" + MAX_RESULTS + "&type=video&q=" + searchText + "&key=" + API_KEY;
+
+        // Setting up Spotify request URL
+        String[] requestAccessTokenHeader = {"Authorization", "Basic " + basicAuth64};
+        final String[] accessToken = {""};
+        String requestAccessTokenURL = "https://accounts.spotify.com/api/token";
+        String requestAccessTokenBody = "grant_type=client_credentials";
+
+        String requestSpotifyURL = "https://api.spotify.com/v1/search?q=" + searchText + "&type=track";
+        final String[] requestSpotifyHeader = {"Authorization",""};
 
         // Instantiate the RequestQueue.
         final RequestQueue queue = Volley.newRequestQueue(this);
-        String requestURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=" + MAX_RESULTS + "&type=video&q=" + searchText + "&key=" + API_KEY;
-        // String requestURL = "http://www.httpbin.org/get";
 
         // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, requestURL, new Response.Listener<String>() {
+        StringRequest youTubeStringRequest = new StringRequest(Request.Method.GET, requestYouTubeURL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                // Add a value to response
                 try {
                     JSONObject json = new JSONObject(response);
                     JSONArray items = json.getJSONArray("items");
@@ -89,79 +141,82 @@ public class SongSearchActivity extends AppCompatActivity {
                     for(int i = 0; i < items_length; i++) {
                         tempString = getVideoInfo(items.getJSONObject(i));
                         videoIDS.add(tempString[0]);
-                        imageDescriptions.add(tempString[1]);
-                        imageURLS.add(tempString[2]);
+                        videoDescriptions.add(tempString[1]);
+                        youTubeImageURLS.add(tempString[2]);
                     }
                 }
                 catch (Exception e) {
-                    imageDescriptions.add("No search results");
-                    imageURLS.add(INVALID_SEARCH);
                     videoIDS.add("-1");
+                    videoDescriptions.add("No search results");
+                    youTubeImageURLS.add(INVALID_SEARCH);
                 }
-                adapter.notifyDataSetChanged();
+                youTubeAdapter.notifyDataSetChanged();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                videoIDS.add("-1");
+                videoDescriptions.add(error.toString());
+                youTubeImageURLS.add(INVALID_SEARCH);
             }
         });
 
-        String[] requestHeader2 = new String[2];
-        final String[] accessToken = {"No"};
-        String requestURL2 = "https://accounts.spotify.com/api/token";
-        String requestBody = "grant_type=client_credentials";
-        requestHeader2[0] = "Authorization";
-        requestHeader2[1] = "Basic " + basicAuth64;
-
-        String[] requestHeader = new String[2];
-        // accessToken[0] = "BQD60P75hsJvTn8uaVpYAkp-pHPGaT01IZ76W_PkYKflRx4Y2f6GcjKjCpPr05y8mBnYwTtcOxAFs0VFTuQ";
-        String requestURL1 = "https://api.spotify.com/v1/search?q=" + searchText + "&type=artist,album,track";
-        requestHeader[0] = "Authorization";
-        requestHeader[1] = "Bearer " + accessToken[0];
-
-        final StringRequestWithCookies stringRequest1 = new StringRequestWithCookies(requestURL1, requestHeader, new Response.Listener<String>() {
+        final StringRequestWithCookies spotifySearchStringRequest = new StringRequestWithCookies(requestSpotifyURL, requestSpotifyHeader, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
-                    // TODO: This response is the search response from the API -> Format this into a listView
-                    // Toast.makeText(getApplicationContext(),accessToken[0], Toast.LENGTH_LONG).show();
-                    // Toast.makeText(getApplicationContext(),response, Toast.LENGTH_LONG).show();
+                    JSONObject json = new JSONObject(response);
+                    JSONArray items = json.getJSONObject("tracks").getJSONArray("items");
+                    int items_length = items.length();
+                    if (items_length == 0) {
+                        throw new Exception("No search results");
+                    }
+                    String[] tempString;
+                    for(int i = 0; i < items_length; i++) {
+                        tempString = getSpotifyInfo(items.getJSONObject(i));
+                        spotifyURLS.add(tempString[0]);
+                        songDescriptions.add(tempString[1]);
+                        spotifyImageURLS.add(tempString[2]);
+                    }
                 } catch (Exception e) {
-                    Toast.makeText(getApplicationContext(),e.toString(), Toast.LENGTH_LONG).show();
+                    spotifyURLS.add("-1");
+                    songDescriptions.add(response.toString());
+                    spotifyImageURLS.add(INVALID_SEARCH);
                 }
-                adapter.notifyDataSetChanged();
+                spotifyAdapter.notifyDataSetChanged();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getApplicationContext(),'a', Toast.LENGTH_LONG).show();
+                spotifyURLS.add("-1");
+                songDescriptions.add(error.toString());
+                spotifyImageURLS.add(INVALID_SEARCH);
             }
         });
 
-        StringRequestWithCookiesBody stringRequest2 = new StringRequestWithCookiesBody(requestURL2, requestHeader2, requestBody, new Response.Listener<String>() {
+        StringRequestWithCookiesBody spotifyAccessTokenStringRequest = new StringRequestWithCookiesBody(requestAccessTokenURL, requestAccessTokenHeader, requestAccessTokenBody, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
                     JSONObject json = new JSONObject(response);
                     accessToken[0] = json.getString("access_token");
-                    queue.add(stringRequest1);
-                    // Toast.makeText(getApplicationContext(),accessToken[0], Toast.LENGTH_LONG).show();
+                    requestSpotifyHeader[1] = "Bearer " + accessToken[0];
+                    queue.add(spotifySearchStringRequest);
                 } catch (Exception e) {
                     Toast.makeText(getApplicationContext(),e.toString(), Toast.LENGTH_LONG).show();
                 }
-                adapter.notifyDataSetChanged();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getApplicationContext(),'a', Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(),error.toString(), Toast.LENGTH_LONG).show();
             }
         });
 
 
         // Add the request to the RequestQueue.
-        queue.add(stringRequest2);
-        queue.add(stringRequest);
+        queue.add(spotifyAccessTokenStringRequest);
+        queue.add(youTubeStringRequest);
     }
     static String getYoutubeURL(String videoID) {
         return "https://www.youtube.com/watch?v=" + videoID;
@@ -183,14 +238,29 @@ public class SongSearchActivity extends AppCompatActivity {
         }
         return toReturn;
     }
-    static String getSpotifyLink(String temp) {
-        return temp;
-    }
+
     static String[] getSpotifyInfo(JSONObject item) {
         String[] toReturn = new String[3];
-        toReturn[0] = "Something to link to spotify app";
-        toReturn[1] = "Title";
-        toReturn[2] = "Song thumbnail";
+        toReturn[0] = "Spotify URL";
+        toReturn[1] = "Song Title";
+        toReturn[2] = "Song Thumbnail";
+        try {
+            toReturn[0] = item.getString("uri");
+            toReturn[1] = item.getString("name");
+
+            // Get the name of all the artists and format it properly
+            JSONArray artists = item.getJSONArray("artists");
+            int artists_length = artists.length();
+            for (int i = 0; i < artists_length; i++) {
+                toReturn[1] += ", " + artists.getJSONObject(i).getString("name");
+            }
+
+            // Get the thumbnail for the album which the song is part of
+            toReturn[2] = item.getJSONObject("album").getJSONArray("images").getJSONObject(0).getString("url");
+        }
+        catch (Exception e) {
+            toReturn[1] = e.toString();
+        }
         return toReturn;
     }
 }

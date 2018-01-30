@@ -16,4 +16,6 @@
     <string name="goto_privacy">Goto Settings</string>
     <string name="open_apps">Background Open</string>
     <string name="owner">\@Imas Neupane 2018</string>
+    <string name="image_description">Thumbnail</string>
+    <string name="search_type"></string>
 </resources>
