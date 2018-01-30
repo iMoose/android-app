@@ -1,7 +1,9 @@
 package com.example.myapp;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.v4.util.LruCache;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -75,10 +77,16 @@ public class SongSearchActivity extends AppCompatActivity {
             }
         });
 
+        // Calculate max size of cache
+        final int maxMemory = (int) Runtime.getRuntime().maxMemory() / 1024;
+        final int cacheSize = maxMemory / 8;
+
         // Information holders for YouTube
         final ArrayList<String> videoDescriptions =new ArrayList<>();
         final ArrayList<String> youTubeImageURLS = new ArrayList<>();
         final ArrayList<String> videoIDS = new ArrayList<>();
+        final LruCache<String, Bitmap> youTubeCache = new LruCache<>(cacheSize);
+        final LruCache<String, Bitmap> spotifyCache = new LruCache<>(cacheSize);
 
         // Information holders for Spotify
         final ArrayList<String> songDescriptions =new ArrayList<>();
@@ -87,8 +95,8 @@ public class SongSearchActivity extends AppCompatActivity {
 
 
         // Adapters for holding the information for YouTube and Spotify
-        final CustomList youTubeAdapter = new CustomList(SongSearchActivity.this, videoDescriptions, youTubeImageURLS, videoIDS);
-        final CustomList spotifyAdapter = new CustomList(SongSearchActivity.this, songDescriptions, spotifyImageURLS, spotifyURLS);
+        final CustomList youTubeAdapter = new CustomList(SongSearchActivity.this, videoDescriptions, youTubeImageURLS, videoIDS, youTubeCache);
+        final CustomList spotifyAdapter = new CustomList(SongSearchActivity.this, songDescriptions, spotifyImageURLS, spotifyURLS, spotifyCache);
 
         // Setting adapters to listViews so they display the right information
         listYouTube.setAdapter(youTubeAdapter);
