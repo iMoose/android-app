@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setTitle("My App");
     }
 
     public void gotoGif(View view) {
@@ -79,5 +80,10 @@ public class MainActivity extends AppCompatActivity {
             if (intents[i] != null)
                 startActivity(intents[i]);
         }
+    }
+
+    public void gotoSecret(View view) {
+        Intent intent = new Intent(this, SecretActivity.class);
+        startActivity(intent);
     }
 }

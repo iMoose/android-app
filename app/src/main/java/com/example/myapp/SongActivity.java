@@ -13,6 +13,7 @@ public class SongActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_song);
+        setTitle("Enter Song/Video");
     }
 
     /** Called when the user taps the send button */

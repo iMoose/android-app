@@ -13,6 +13,7 @@ public class GiffActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_gif);
+        setTitle("Enter search");
     }
 
     /** Called when the user taps the send button */
