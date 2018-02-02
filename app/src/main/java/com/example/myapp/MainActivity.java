@@ -86,4 +86,9 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, SecretActivity.class);
         startActivity(intent);
     }
+
+    public void gotoPuzzle(View view) {
+        Intent intent = new Intent(this, PuzzleActivity.class);
+        startActivity(intent);
+    }
 }

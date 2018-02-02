@@ -1,10 +1,7 @@
 package com.example.myapp;
 
 import android.Manifest;
-import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Parcelable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -59,31 +56,31 @@ public class SecretActivity extends AppCompatActivity {
 
     public void onClick( View v ) {
         switch (v.getId()) {
-            case (R.id.button1):
+            case (R.id.button9):
                 clickNumber("1");
                 break;
-            case (R.id.button2):
+            case (R.id.button7):
                 clickNumber("2");
                 break;
-            case (R.id.button3):
+            case (R.id.button8):
                 clickNumber("3");
                 break;
-            case (R.id.button4):
+            case (R.id.button6):
                 clickNumber("4");
                 break;
-            case (R.id.button5):
+            case (R.id.button3):
                 clickNumber("5");
                 break;
-            case (R.id.button6):
+            case (R.id.button5):
                 clickNumber("6");
                 break;
-            case (R.id.button7):
+            case (R.id.button4):
                 clickNumber("7");
                 break;
-            case (R.id.button8):
+            case (R.id.button1):
                 clickNumber("8");
                 break;
-            case (R.id.button9):
+            case (R.id.button2):
                 clickNumber("9");
                 break;
         }}
