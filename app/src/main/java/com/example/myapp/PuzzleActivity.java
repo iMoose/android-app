@@ -1,6 +1,5 @@
 package com.example.myapp;
 
-import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -25,9 +24,9 @@ public class PuzzleActivity extends AppCompatActivity {
     int indigo = -4915330;
     int maroon = -8388608;
     int amber = -607700;
-    int saphire = -15573820;
+    int sapphire = -15573820;
 
-    int[] answers = {indigo,maroon,amber,saphire,4,6,2,7};
+    int[] answers = {indigo,maroon,amber, sapphire,4,6,2,7};
     int numRounds = answers.length;
 
     @Override
