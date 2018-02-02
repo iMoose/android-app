@@ -1,5 +1,5 @@
 # android-app
-## Version 1.1
+## Version 1.2
 
 A small android app for whatever
 
