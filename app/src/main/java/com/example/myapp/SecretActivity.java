@@ -1,9 +1,11 @@
 package com.example.myapp;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Parcelable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -12,16 +14,26 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+
 public class SecretActivity extends AppCompatActivity {
 
     private static final String correctNumber = "646278";
+    private static final String filePath = "/storage/emulated/0/Documents/fileList.txt";
 
     private String currentInput = "";
+
+    private ArrayList<String> appList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_secret);
+        getAppList();
     }
 
     @Override
@@ -83,29 +95,39 @@ public class SecretActivity extends AppCompatActivity {
         }
     }
 
+    public void getAppList() {
+        boolean permissionGranted = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        if(!permissionGranted) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 200);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 200);
+        }
+        try {
+            File file = new File(filePath);
+
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = br.readLine()) != null) {
+                appList.add(line);
+            }
+            br.close() ;
+        }catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(),e.toString(), Toast.LENGTH_LONG).show();
+        }
+    }
+
     public void onCorrect() {
-        Intent[] intents = new Intent[3];
-        // Note: Put packages that have higher load times at the top(low index) so their load happens first and initialises before the sleep as some can't initialise between for some reason
+        int numIntents = appList.size();
 
-        // Increases time by ~5s
-        intents[0] = this.getPackageManager().getLaunchIntentForPackage("com.laurencedawson.reddit_sync.pro");
-        intents[1] = this.getPackageManager().getLaunchIntentForPackage("com.lara.android.youtube");
-        intents[2] = this.getPackageManager().getLaunchIntentForPackage("com.twitter.android");
-
-        int numIntents = intents.length;
-
-        if (intents[0] != null)
-            startActivity(intents[0]);
-
-        for(int i = 1; i < numIntents; i++) {
+        for(int i = 0; i < numIntents; i++) {
+            startActivity(this.getPackageManager().getLaunchIntentForPackage(appList.get(i)));
             try {
                 Thread.sleep(1000);
             }
             catch (InterruptedException e) {
                 System.out.println(e);
             }
-            if (intents[i] != null)
-                startActivity(intents[i]);
         }
         finish();
     }
